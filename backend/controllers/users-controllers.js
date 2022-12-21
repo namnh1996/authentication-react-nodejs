@@ -5,14 +5,15 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 const getUsers = async (req, res, next) => {
-	let users;
 	try {
-		users = await User.find({}, "-password");
+		const users = await User.find({}, "-password");
+		res.json({
+			users: users.map((user) => user.toObject({ getters: true })),
+		});
 	} catch (error) {
 		const err = new HttpError("Fetching users failed, try again later!");
 		return next(err);
 	}
-	res.json({ users: users.map((user) => user.toObject({ getters: true })) });
 };
 
 const logIn = async (req, res, next) => {
@@ -61,7 +62,7 @@ const logIn = async (req, res, next) => {
 		token = jwt.sign(
 			{ userId: existingUser.id, email: existingUser.email },
 			"supersecret",
-			{ expiresIn: "1h" }
+			{ expiresIn: "1m" }
 		);
 	} catch (error) {
 		const err = new HttpError("Logging up failed, try again!", 500);
@@ -132,13 +133,12 @@ const signUp = async (req, res, next) => {
 		token = jwt.sign(
 			{ userId: createdUser.id, email: createdUser.email },
 			"supersecret",
-			{ expiresIn: "1h" }
+			{ expiresIn: "1m" }
 		);
 	} catch (error) {
 		const err = new HttpError("Signing up failed, try again!", 500);
 		return next(err);
 	}
-
 	res.status(201).json({
 		user: createdUser.id,
 		email: createdUser.email,
